@@ -20,7 +20,8 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int REQUEST_CODE_READ_PHONE_STATE = 73;
+    private static final int REQUEST_CODE_READ_PHONE_STATE_DEVICEID = 71;
+    private static final int REQUEST_CODE_READ_PHONE_STATE_SERIALID = 73;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,20 +29,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // for Device ID、Subscriber ID/SimSerialNumber
-        getDeviceId();
+//        getDeviceId();
 
         // for SerialNumber
         getSerialNumber();
 
         // for Mac Address
-        getWiFiMacAddress();
-        getBluetoothMacAddress();
+//        getWiFiMacAddress();
+//        getBluetoothMacAddress();
 
         // for Android ID
-        getAndroidId();
+//        getAndroidId();
 
         // for UUID
-        getUUID();
+//        getUUID();
     }
 
     private void getUUID() {
@@ -71,9 +72,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getSerialNumber() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d(TAG, "Build.VERSION.SDK_INT >= Build.VERSION_CODES.O");
+            if (ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_CODE_READ_PHONE_STATE_SERIALID);
+                return;
+            }
+            String serial = Build.getSerial();
+            Log.d(TAG, "Build.getSerial(): " + serial);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            Log.d(TAG, "Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD");
             String serial = Build.SERIAL;
-            Log.d(TAG, "Serial: " + serial);
+            Log.d(TAG, "Build.SERIAL: " + serial);
         }
     }
 
@@ -88,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
             if (ActivityCompat.checkSelfPermission(this,
                     Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_CODE_READ_PHONE_STATE);
+                        new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_CODE_READ_PHONE_STATE_DEVICEID);
                 return;
             }
         }
@@ -114,12 +127,10 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == REQUEST_CODE_READ_PHONE_STATE) {
-
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                getDeviceId();
-            else
-                Log.d(TAG, "onRequestPermissionsResult: REQUEST_CODE_READ_PHONE_STATE: No Permission");
-        }
+        if (requestCode == REQUEST_CODE_READ_PHONE_STATE_DEVICEID &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) getDeviceId();
+        else if (requestCode == REQUEST_CODE_READ_PHONE_STATE_SERIALID &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) getSerialNumber();
+        else Log.d(TAG, "onRequestPermissionsResult: REQUEST_CODE_READ_PHONE_STATE: No Permission");
     }
 }
